@@ -69,6 +69,60 @@ if mode == "📊 Visualisasi Data":
             st.success("✅ Data berhasil diunggah.")
             st.dataframe(df.head())
 
+            # ===============================
+            # SUB-MENU DALAM TAB VISUALISASI
+            # ===============================
+            st.subheader("📊 Eksplorasi & Analisis Data")
+
+            sub_option = st.radio(
+                "Pilih tampilan analisis:",
+                ("Visualisasi Data", "Analisis Wilayah Rawan", "Faktor Paling Berpengaruh")
+            )
+
+            if sub_option == "Visualisasi Data":
+                st.write("Tampilkan grafik, distribusi data, atau heatmap di sini.")
+                # Contoh placeholder visualisasi (kalau belum ada)
+                st.area_chart(df.select_dtypes('number'))
+
+            elif sub_option == "Analisis Wilayah Rawan":
+                st.write("### 🗺️ Analisis Wilayah Rawan Kekurangan Air")
+
+                try:
+                    from sklearn.cluster import KMeans
+                    X = df.select_dtypes('number')
+                    kmeans = KMeans(n_clusters=3, random_state=42)
+                    df['Cluster'] = kmeans.fit_predict(X)
+
+                    cluster_summary = df.groupby('Cluster').mean()
+                    st.dataframe(cluster_summary)
+
+                    st.success("Analisis wilayah rawan berhasil dibuat menggunakan pendekatan K-Means.")
+                except Exception as e:
+                    st.warning("K-Means belum dijalankan karena data belum tersedia atau belum diproses.")
+                    st.text(e)
+
+            elif sub_option == "Faktor Paling Berpengaruh":
+                st.write("### 🌿 Faktor Paling Berpengaruh terhadap Kelayakan Air")
+
+                try:
+                    import pickle
+                    model = pickle.load(open("model.pkl", "rb"))
+
+                    # Coba ambil feature importance dari model RandomForest
+                    if hasattr(model, "feature_importances_"):
+                        feature_importances = pd.DataFrame({
+                            "Feature": df.drop(columns=['target']).columns,
+                            "Importance": model.feature_importances_
+                        }).sort_values(by="Importance", ascending=False)
+
+                        st.bar_chart(feature_importances.set_index("Feature"))
+                        st.success("Berikut faktor-faktor yang paling berpengaruh terhadap ketersediaan air.")
+                    else:
+                        st.info("Model tidak memiliki atribut feature_importances_.")
+                except Exception as e:
+                    st.warning("Gagal menampilkan faktor paling berpengaruh.")
+                    st.text(e)
+
             # Validasi kolom
             if "bps_nama_kabupaten_kota" not in df.columns:
                 st.error("❌ Kolom 'bps_nama_kabupaten_kota' tidak ditemukan di dataset.")
