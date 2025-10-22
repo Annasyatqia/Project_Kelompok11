@@ -33,8 +33,12 @@ def load_ml_artifacts() -> Dict[str, Any]:
         artifacts = {"model": model, "scaler": scaler, **encoders}
         logger.info("✅ Artifacts berhasil dimuat dari .pkl.")
         return artifacts
+    except FileNotFoundError as e:
+        st.error(f"❌ File artifacts tidak ditemukan: {e}. Pastikan file model.pkl, scaler.pkl, dan encoders.pkl ada di direktori root.")
+        st.stop()
     except Exception as e:
-        st.error(f"❌ Gagal memuat artifacts: {e}. Pastikan file model.pkl, scaler.pkl, dan encoders.pkl ada di repository.")
+        st.error(f"❌ Gagal memuat artifacts: {str(e)}. Periksa file .pkl atau versi library.")
+        logger.error(f"Gagal memuat artifacts: {str(e)}")
         st.stop()
 
 with st.spinner("🚀 Sedang memuat model dan resource... (sekitar 10–30 detik)"):
